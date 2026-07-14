@@ -65,6 +65,12 @@ likelihood ratings and remediation, and
 [`docs/owasp-mapping.md`](docs/owasp-mapping.md) for the complete 2021→2025
 category shift.
 
+**Benchmarking a scanner against this lab?** See
+[`docs/expected-scan-results.md`](docs/expected-scan-results.md) — the
+ground-truth answer key: **86 intentional findings (23 Critical / 45 High /
+18 Medium / 0 Low)** scored with CVSS v3.1 (81 SAST + 5 SCA), plus the 24 safe
+reference handlers a good tool must *not* flag.
+
 ## Running the apps
 
 Each app is standalone. Full instructions live in each app's `README.md`.

@@ -26,6 +26,12 @@ meet.
 | Server-Side Request Forgery | [`05-ssrf.md`](05-ssrf.md) | A10 → A01 (folded) |
 | Path Traversal | [`06-path-traversal.md`](06-path-traversal.md) | A01 / A05 |
 | OWASP 2021 ↔ 2025 mapping | [`owasp-mapping.md`](owasp-mapping.md) | — |
+| **Expected scan results (ground-truth baseline)** | [`expected-scan-results.md`](expected-scan-results.md) | — |
+
+> **Benchmarking a scanner?** [`expected-scan-results.md`](expected-scan-results.md)
+> is the answer key: **86 intentional findings (23 Critical / 45 High / 18 Medium
+> / 0 Low)** scored with CVSS v3.1, plus the 24 safe handlers a good tool must
+> *not* flag.
 
 ---
 
