@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Python VulnApp{% endblock %}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 60rem; margin: 2rem auto; padding: 0 1rem; }
+    code, pre { background: #f4f4f4; padding: .1rem .3rem; border-radius: 3px; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { border: 1px solid #ddd; padding: .4rem .6rem; text-align: left; }
+    .warn { background: #fff3cd; border: 1px solid #ffe69c; padding: .6rem 1rem; border-radius: 6px; }
+    a { color: #0b5ed7; }
+  </style>
+</head>
+<body>
+  <p class="warn">⚠️ Intentionally vulnerable demo app — for security education only.</p>
+  {% block body %}{% endblock %}
+</body>
+</html>

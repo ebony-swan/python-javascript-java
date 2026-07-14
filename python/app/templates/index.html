@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Python VulnApp — endpoint index{% endblock %}
+{% block body %}
+  <h1>Python VulnApp</h1>
+  <p>Deliberately vulnerable Flask app demonstrating OWASP Top 10 code-level
+     issues, with multiple permutations per category. Every registered endpoint
+     is listed below.</p>
+  <table>
+    <thead><tr><th>Methods</th><th>Path</th><th>Handler</th></tr></thead>
+    <tbody>
+      {% for r in routes %}
+        <tr><td>{{ r.methods }}</td><td><code>{{ r.rule }}</code></td><td>{{ r.endpoint }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

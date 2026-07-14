@@ -1,0 +1,6 @@
+# Python vulnerable demo app dependencies.
+# NOTE: Some versions are intentionally chosen to make the deliberate
+# vulnerabilities easy to reproduce. Do NOT use these in production.
+Flask==3.0.3
+PyYAML==6.0.2
+requests==2.32.3

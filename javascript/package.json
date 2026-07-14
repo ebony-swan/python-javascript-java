@@ -1,0 +1,18 @@
+{
+  "name": "javascript-vulnapp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Deliberately vulnerable Express app demonstrating OWASP Top 10 code-level issues (multiple permutations per category). For security education only.",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "node-serialize": "0.0.4",
+    "lodash": "4.17.11"
+  }
+}
