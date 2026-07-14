@@ -5,12 +5,26 @@ ground-truth — the deliberately-planted vulnerabilities and the known-safe
 "control" handlers. Answers: *how much did the scanner actually find, what did it
 miss, and how noisy / false-positive-prone was it?*
 
-Zero dependencies (Python 3 standard library only).
+Zero dependencies (Python 3 standard library only). Self-contained: the whole
+folder can be lifted out and used on its own (see **Spinning it out** below).
 
 ```bash
 python3 benchmark/compare.py <report>                    # auto-detect format
 python3 benchmark/compare.py report.sarif
 python3 benchmark/compare.py report.csv --md out.md --json out.json
+
+# try it immediately against the bundled example:
+python3 benchmark/compare.py benchmark/examples/sample-report.sarif
+```
+
+## Folder contents
+
+```
+benchmark/
+├── compare.py     the engine (CLI)
+├── baseline.json  the answer key + project layout (the only project-specific file)
+├── examples/      a runnable sample SARIF report
+└── README.md      this file
 ```
 
 ## Supported report formats (auto-detected)
@@ -74,6 +88,33 @@ tools use very different rule taxonomies and severity models, so raw counts
 The safe-handler line ranges are **not** hard-coded — they are detected from the
 source at runtime (handlers whose route or function name contains `safe`), so
 they stay correct as the code changes.
+
+## Spinning it out (using the engine on its own)
+
+The folder is self-contained. To use it outside this repo, copy `compare.py` and
+`baseline.json` (and optionally `examples/`) wherever you like:
+
+```bash
+cp -r benchmark/ ~/sast-benchmark
+python3 ~/sast-benchmark/compare.py your-report.sarif
+```
+
+Everything except **precision** works with just those two files — coverage,
+recall, severity, and finding disposition all come from `baseline.json` + the
+report. **Precision** (false positives on the safe control handlers) needs the
+scanned project's source, because the engine locates the `*-safe` handlers by
+reading it:
+
+- `baseline.json → source_layout` says where the source lives (`root` +
+  per-language `modules` dirs) and the `safe_marker` string.
+- `root` is resolved relative to `baseline.json`; override at runtime with
+  `--source-root /path/to/project`.
+- If the source isn't found, coverage/recall still print and precision reports
+  `n/a - project source not found ... pass --source-root`.
+
+To point the engine at a **different** target project, replace `baseline.json`
+with that project's answer key (its planted vulnerabilities, categories, and
+`source_layout`). The engine code doesn't change.
 
 ## Notes
 

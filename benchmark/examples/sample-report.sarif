@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "ExampleSAST",
+          "informationUri": "https://example.invalid/sast",
+          "rules": [
+            {"id": "sql-injection", "name": "SQL Injection", "properties": {"security-severity": "9.8", "tags": ["external/cwe/cwe-89"]}},
+            {"id": "reflected-xss", "name": "Reflected XSS", "properties": {"security-severity": "6.1", "tags": ["external/cwe/cwe-79"]}},
+            {"id": "ssrf", "name": "Server-Side Request Forgery", "properties": {"security-severity": "8.6", "tags": ["external/cwe/cwe-918"]}},
+            {"id": "path-traversal", "name": "Path Traversal", "properties": {"security-severity": "7.5", "tags": ["external/cwe/cwe-22"]}}
+          ]
+        }
+      },
+      "results": [
+        {"ruleId": "sql-injection", "level": "error",
+         "locations": [{"physicalLocation": {"artifactLocation": {"uri": "javascript/routes/injection_sql.js"}, "region": {"startLine": 33}}}]},
+        {"ruleId": "reflected-xss", "level": "warning",
+         "locations": [{"physicalLocation": {"artifactLocation": {"uri": "javascript/routes/injection_xss.js"}, "region": {"startLine": 33}}}]},
+        {"ruleId": "ssrf", "level": "error",
+         "locations": [{"physicalLocation": {"artifactLocation": {"uri": "python/app/vulns/ssrf.py"}, "region": {"startLine": 49}}}]},
+        {"ruleId": "path-traversal", "level": "error",
+         "locations": [{"physicalLocation": {"artifactLocation": {"uri": "javascript/routes/path_traversal.js"}, "region": {"startLine": 166}}}]}
+      ]
+    }
+  ]
+}

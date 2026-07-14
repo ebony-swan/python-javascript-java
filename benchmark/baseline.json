@@ -4,6 +4,17 @@
   "note_vendor_neutral": "This file names no scanner. Severities are representative CVSS v3.1 bands, not any vendor's rating.",
   "cvss_bands": {"Critical": "9.0-10.0", "High": "7.0-8.9", "Medium": "4.0-6.9", "Low": "0.1-3.9"},
 
+  "source_layout": {
+    "_comment": "Where the project's source lives, so the engine can auto-locate the SAFE control handlers for precision scoring. 'root' is relative to this file; override at runtime with --source-root. If the source is absent (engine copied out on its own), coverage/recall still work and precision reports n/a.",
+    "root": "..",
+    "safe_marker": "safe",
+    "modules": {
+      "python": "python/app/vulns",
+      "javascript": "javascript/routes",
+      "java": "java/src/main/java/com/example/vulnapp/vulns"
+    }
+  },
+
   "categories": {
     "sqli":    {"name": "SQL Injection",              "owasp_2021": "A03", "owasp_2025": "A05", "cwes": [89, 564]},
     "command": {"name": "Command Injection",          "owasp_2021": "A03", "owasp_2025": "A05", "cwes": [78, 88]},

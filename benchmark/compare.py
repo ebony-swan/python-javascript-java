@@ -30,14 +30,7 @@ import sys
 from collections import defaultdict, Counter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REPO = os.path.dirname(HERE)
 SEV_ORDER = ["Critical", "High", "Medium", "Low", "Info"]
-
-LANG_DIRS = {
-    "python": os.path.join(REPO, "python", "app", "vulns"),
-    "javascript": os.path.join(REPO, "javascript", "routes"),
-    "java": os.path.join(REPO, "java", "src", "main", "java", "com", "example", "vulnapp", "vulns"),
-}
 
 
 # --------------------------------------------------------------------------- #
@@ -141,28 +134,38 @@ def map_category(rule, cwe, baseline):
 # --------------------------------------------------------------------------- #
 # Source scan: locate SAFE reference handler line ranges (the control group)
 # --------------------------------------------------------------------------- #
-def scan_safe_ranges():
-    """Return {basename: [(start_line, end_line), ...]} for SAFE reference
-    handlers only.
+def scan_safe_ranges(source_root, baseline):
+    """Return ({basename: [(start_line, end_line), ...]}, source_available) for
+    SAFE reference handlers only.
 
     A handler counts as SAFE when its ROUTE PATH or its FUNCTION/METHOD NAME
-    contains 'safe' (e.g. /login-safe, read_safe, resetTokenSafe) -- NOT merely
-    because a nearby comment says "see the SAFE reference". Comment-based
-    matching would wrongly flag every handler, since each documents its safe
-    counterpart."""
+    contains the safe marker (e.g. /login-safe, read_safe, resetTokenSafe) --
+    NOT merely because a nearby comment says "see the SAFE reference". Comment-
+    based matching would wrongly flag every handler.
+
+    Source directories come from baseline['source_layout'] joined to
+    source_root, so the engine has no hard-coded project paths and can be spun
+    out on its own. `source_available` is False when none of the module dirs
+    exist (engine copied out without the code) -> precision reported as n/a."""
     anchor_rx = {
-        "python": re.compile(r"^\s*@bp\.(?:get|post|put|delete|route)\(", re.I),
-        "javascript": re.compile(r"^\s*router\.(?:get|post|put|delete|use)\(", re.I),
+        "python": re.compile(r"^\s*@\w+\.(?:get|post|put|delete|route)\(", re.I),
+        "javascript": re.compile(r"^\s*\w+\.(?:get|post|put|delete|use)\(", re.I),
         "java": re.compile(r"^\s*@(?:Get|Post|Put|Delete|Request)Mapping\b"),
     }
+    layout = baseline.get("source_layout", {})
+    modules = layout.get("modules", {})
+    marker = str(layout.get("safe_marker", "safe")).lower()
+    lang_dirs = {lang: os.path.join(source_root, rel) for lang, rel in modules.items()}
     quoted = re.compile(r"""["']([^"']*)["']""")
     py_def = re.compile(r"^\s*def\s+(\w+)")
     java_name = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
     ranges = defaultdict(list)
-    for lang, d in LANG_DIRS.items():
-        if not os.path.isdir(d):
+    source_available = False
+    for lang, d in lang_dirs.items():
+        rx = anchor_rx.get(lang)
+        if rx is None or not os.path.isdir(d):
             continue
-        rx = anchor_rx[lang]
+        source_available = True
         for fn in os.listdir(d):
             path = os.path.join(d, fn)
             if not os.path.isfile(path):
@@ -191,9 +194,9 @@ def scan_safe_ranges():
                             jm = java_name.search(ln)
                             name = jm.group(1) if jm else ""
                             break
-                if "safe" in route.lower() or "safe" in name.lower():
+                if marker in route.lower() or marker in name.lower():
                     ranges[fn].append((s, e))
-    return ranges
+    return ranges, source_available
 
 
 # --------------------------------------------------------------------------- #
@@ -486,7 +489,11 @@ def render(s, baseline, report_path):
 
     # precision / control group
     p("## Precision (control group)")
-    if not s["have_lines"]:
+    if not s.get("source_available", True):
+        p(f"  n/a - project source not found at {s.get('source_root')!r}, so the "
+          "safe control handlers cannot be located. Run from the lab repo, or pass "
+          "--source-root <path>.")
+    elif not s["have_lines"]:
         p("  n/a - report has no line numbers, so findings cannot be located "
           "inside the known-safe handlers. Re-export with line detail to measure.")
     elif s["fp"]:
@@ -504,6 +511,9 @@ def main():
     ap.add_argument("report", help="path to the vendor report (SARIF/CSV/JSON)")
     ap.add_argument("--format", default="auto", choices=["auto", "sarif", "csv", "json"])
     ap.add_argument("--baseline", default=os.path.join(HERE, "baseline.json"))
+    ap.add_argument("--source-root", help="path to the project source, used to "
+                    "locate the SAFE control handlers for precision scoring. "
+                    "Default: resolved from baseline.json's source_layout.root.")
     ap.add_argument("--md", help="write the markdown report to this path")
     ap.add_argument("--json", help="write machine-readable results to this path")
     for c in ["file", "line", "rule", "cwe", "severity"]:
@@ -515,9 +525,17 @@ def main():
     findings = load_report(args.report, args.format, overrides)
     if not findings:
         raise SystemExit("no findings parsed from report")
-    safe_ranges = scan_safe_ranges()
+
+    layout = baseline.get("source_layout", {})
+    default_root = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(args.baseline)),
+                                                  layout.get("root", "..")))
+    source_root = os.path.abspath(args.source_root) if args.source_root else default_root
+    safe_ranges, source_available = scan_safe_ranges(source_root, baseline)
+
     classify(findings, baseline, safe_ranges)
     s = score(findings, baseline)
+    s["source_available"] = source_available
+    s["source_root"] = source_root
     text = render(s, baseline, args.report)
     print(text)
 
@@ -527,6 +545,7 @@ def main():
         out = {
             "report": os.path.basename(args.report),
             "total": s["total"], "have_lines": s["have_lines"],
+            "source_available": s.get("source_available", True),
             "recall_cells": f"{s['detected_cells']}/{s['cells']}",
             "severity": dict(s["sev_hist"]), "baseline_severity": dict(s["base_sev"]),
             "buckets": dict(s["buckets"]), "duplicates": s["dups"],
