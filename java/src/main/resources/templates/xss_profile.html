@@ -1,0 +1,13 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Profile</title>
+</head>
+<body>
+    <h1>Profile</h1>
+    <!-- VULNERABLE: th:utext outputs the model value RAW, bypassing Thymeleaf's
+         default HTML-entity escaping. Swap to th:text to make it safe. -->
+    <p>Welcome, <span th:utext="${name}">name</span></p>
+</body>
+</html>
