@@ -69,7 +69,15 @@ category shift.
 [`docs/expected-scan-results.md`](docs/expected-scan-results.md) — the
 ground-truth answer key: **86 intentional findings (23 Critical / 45 High /
 18 Medium / 0 Low)** scored with CVSS v3.1 (81 SAST + 5 SCA), plus the 24 safe
-reference handlers a good tool must *not* flag.
+reference handlers a good tool must *not* flag. Then drop any vendor's report
+into the **benchmark engine** to score it automatically:
+
+```bash
+python3 benchmark/compare.py your-report.sarif      # or .csv / .json
+```
+
+It reports coverage (recall), false positives on the safe handlers (precision),
+and a per-category × language breakdown. See [`benchmark/`](benchmark/README.md).
 
 ## Running the apps
 

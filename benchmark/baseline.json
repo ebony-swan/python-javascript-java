@@ -1,0 +1,79 @@
+{
+  "project": "multi-language-owasp-lab",
+  "description": "Ground-truth answer key for the multi-language OWASP lab. Each 'expected' entry is one deliberately-planted, exploitable vulnerability (one permutation). The engine (compare.py) scores any SAST report against this.",
+  "note_vendor_neutral": "This file names no scanner. Severities are representative CVSS v3.1 bands, not any vendor's rating.",
+  "cvss_bands": {"Critical": "9.0-10.0", "High": "7.0-8.9", "Medium": "4.0-6.9", "Low": "0.1-3.9"},
+
+  "categories": {
+    "sqli":    {"name": "SQL Injection",              "owasp_2021": "A03", "owasp_2025": "A05", "cwes": [89, 564]},
+    "command": {"name": "Command Injection",          "owasp_2021": "A03", "owasp_2025": "A05", "cwes": [78, 88]},
+    "xss":     {"name": "Cross-Site Scripting",       "owasp_2021": "A03", "owasp_2025": "A05", "cwes": [79, 80, 116, 1336]},
+    "access":  {"name": "Broken Access Control",      "owasp_2021": "A01", "owasp_2025": "A01", "cwes": [639, 862, 863, 915, 285, 284, 602, 566]},
+    "crypto":  {"name": "Cryptographic Failures",     "owasp_2021": "A02", "owasp_2025": "A04", "cwes": [327, 328, 326, 310, 916, 759, 760, 798, 321, 338, 330, 329, 261]},
+    "deser":   {"name": "Software & Data Integrity",  "owasp_2021": "A08", "owasp_2025": "A08", "cwes": [502, 95, 94, 1321]},
+    "ssrf":    {"name": "Server-Side Request Forgery","owasp_2021": "A10", "owasp_2025": "A01", "cwes": [918]},
+    "path":    {"name": "Path Traversal",             "owasp_2021": "A01", "owasp_2025": "A01", "cwes": [22, 23, 36, 73]}
+  },
+
+  "module_patterns": [
+    ["injection_sql", "sqli"], ["sqlinjection", "sqli"],
+    ["injection_command", "command"], ["commandinjection", "command"],
+    ["injection_xss", "xss"], ["xsscontroller", "xss"],
+    ["access_control", "access"], ["accesscontrol", "access"],
+    ["deserialization", "deser"],
+    ["crypto", "crypto"],
+    ["ssrf", "ssrf"],
+    ["path_traversal", "path"], ["pathtraversal", "path"],
+    ["db.", "__framework__"], ["__init__", "__framework__"],
+    ["server.", "__framework__"], ["run.py", "__framework__"], ["schema", "__framework__"]
+  ],
+
+  "rule_keywords": [
+    ["second_order_sql", "sqli"], ["sql_injection", "sqli"], ["sqli", "sqli"], ["sql", "sqli"],
+    ["environment_variable", "command"], ["command_inj", "command"], ["os_command", "command"], ["command", "command"],
+    ["reflected_xss", "xss"], ["stored_xss", "xss"], ["dom_xss", "xss"], ["client_dom", "xss"], ["xss", "xss"], ["cross_site_script", "xss"], ["cross-site_script", "xss"],
+    ["server_side_request", "ssrf"], ["server-side_request", "ssrf"], ["ssrf", "ssrf"],
+    ["zip_slip", "path"], ["path_traversal", "path"], ["directory_traversal", "path"], ["traversal", "path"],
+    ["deserializ", "deser"], ["pickle", "deser"], ["prototype_pollut", "deser"], ["prototype", "deser"], ["code_injection", "deser"], ["remote_code_execution", "deser"], ["unsafe_reflection", "deser"],
+    ["hardcoded_password", "crypto"], ["hard_coded_password", "crypto"], ["hard-coded_credential", "crypto"], ["hardcoded", "crypto"], ["hard_coded", "crypto"], ["hard-coded", "crypto"], ["broken_or_risky_crypto", "crypto"], ["weak_crypto", "crypto"], ["cryptographic", "crypto"], ["encryption", "crypto"], ["cipher", "crypto"], ["weak_hash", "crypto"], ["unsalted", "crypto"], ["_hash", "crypto"], ["insecure_random", "crypto"], ["random", "crypto"],
+    ["parameter_tampering", "access"], ["tampering", "access"], ["missing_authoriz", "access"], ["authoriz", "access"], ["idor", "access"], ["improper_access", "access"], ["access_control", "access"], ["mass_assign", "access"], ["insecure_direct_object", "access"]
+  ],
+
+  "data_exposure_cwes": [200, 201, 209, 212, 312, 316, 317, 319, 359, 532],
+  "data_exposure_rules": ["cleartext_storage", "cleartext", "sensitive_data", "sensitive_information", "information_exposure", "data_exposure", "verbose_error", "stack_trace", "insertion_of_sensitive"],
+  "hardening_rules": ["missing_hsts", "missing_csp", "missing_tls", "hsts", "csp_header", "content_security", "x_frame", "clickjack", "cookie", "cors", "secure_flag", "httponly", "csrf", "cross_site_request_forgery", "request_forgery"],
+  "noise_rules": ["unchecked_input_for_loop", "loop_condition", "privacy_violation", "privacy", "heap_inspection", "trust_boundary", "log_forging", "improper_exception", "error_handling", "resource_shutdown", "resource_leak", "dangerous_function", "improper_resource"],
+
+  "expected": {
+    "python": {
+      "sqli":    [["sqli-login-bypass", "Critical", 89, "/injection/sql/login"], ["sqli-union-theft", "Critical", 89, "/injection/sql/search"], ["sqli-orderby-blind", "High", 89, "/injection/sql/notes"]],
+      "command": [["cmd-ping-shell", "Critical", 78, "/injection/command/ping"], ["cmd-dns-shell", "Critical", 78, "/injection/command/dns"], ["cmd-arg-injection", "High", 78, "/injection/command/backup"]],
+      "xss":     [["xss-reflected", "Medium", 79, "/injection/xss/hello"], ["xss-stored", "Medium", 79, "/injection/xss/comment"], ["xss-dom", "Medium", 79, "/injection/xss/dom"], ["xss-template-ssti", "Critical", 1336, "/injection/xss/profile"]],
+      "access":  [["idor", "High", 639, "/access/note"], ["missing-func-authz", "High", 862, "/access/admin/users"], ["mass-assignment", "High", 915, "/access/profile"], ["client-controlled-role", "High", 602, "/access/dashboard"]],
+      "crypto":  [["weak-hash", "Medium", 916, "/crypto/hash"], ["hardcoded-secret", "High", 798, "/crypto/token"], ["weak-cipher", "Medium", 327, "/crypto/encrypt"], ["insecure-randomness", "High", 338, "/crypto/reset-token"]],
+      "deser":   [["native-deser", "Critical", 502, "/deserialization/pickle"], ["unsafe-yaml", "Critical", 502, "/deserialization/yaml"], ["eval-injection", "Critical", 95, "/deserialization/eval"]],
+      "ssrf":    [["ssrf-fetch", "High", 918, "/ssrf/fetch"], ["ssrf-webhook", "High", 918, "/ssrf/webhook"], ["ssrf-blocklist-bypass", "High", 918, "/ssrf/preview"]],
+      "path":    [["path-read", "High", 22, "/path/read"], ["path-download", "High", 22, "/path/download"], ["zip-slip", "High", 22, "/path/extract"]]
+    },
+    "javascript": {
+      "sqli":    [["sqli-login-bypass", "Critical", 89, "/injection/sql/login"], ["sqli-union-theft", "Critical", 89, "/injection/sql/search"], ["sqli-orderby-blind", "High", 89, "/injection/sql/notes"]],
+      "command": [["cmd-ping-shell", "Critical", 78, "/injection/command/ping"], ["cmd-dns-shell", "Critical", 78, "/injection/command/dns"], ["cmd-arg-injection", "High", 78, "/injection/command/backup"]],
+      "xss":     [["xss-reflected", "Medium", 79, "/injection/xss/hello"], ["xss-stored", "Medium", 79, "/injection/xss/comment"], ["xss-dom", "Medium", 79, "/injection/xss/dom"], ["xss-attribute-context", "Medium", 79, "/injection/xss/profile"]],
+      "access":  [["idor", "High", 639, "/access/note"], ["missing-func-authz", "High", 862, "/access/admin/users"], ["mass-assignment", "High", 915, "/access/profile"], ["client-controlled-role", "High", 602, "/access/dashboard"]],
+      "crypto":  [["weak-hash", "Medium", 916, "/crypto/hash"], ["hardcoded-secret", "High", 798, "/crypto/token"], ["weak-cipher", "Medium", 327, "/crypto/encrypt"], ["insecure-randomness", "High", 338, "/crypto/reset-token"]],
+      "deser":   [["native-deser", "Critical", 502, "/deserialization/native"], ["eval-config", "Critical", 95, "/deserialization/eval"], ["prototype-pollution", "High", 1321, "/deserialization/merge"]],
+      "ssrf":    [["ssrf-fetch", "High", 918, "/ssrf/fetch"], ["ssrf-webhook", "High", 918, "/ssrf/webhook"], ["ssrf-blocklist-bypass", "High", 918, "/ssrf/preview"]],
+      "path":    [["path-read", "High", 22, "/path/read"], ["path-download", "High", 22, "/path/download"], ["zip-slip", "High", 22, "/path/extract"]]
+    },
+    "java": {
+      "sqli":    [["sqli-login-bypass", "Critical", 89, "/injection/sql/login"], ["sqli-union-theft", "Critical", 89, "/injection/sql/search"], ["sqli-orderby-blind", "High", 89, "/injection/sql/notes"]],
+      "command": [["cmd-ping-shell", "Critical", 78, "/injection/command/ping"], ["cmd-dns-shell", "Critical", 78, "/injection/command/dns"], ["cmd-arg-injection", "High", 78, "/injection/command/backup"]],
+      "xss":     [["xss-reflected", "Medium", 79, "/injection/xss/hello"], ["xss-stored", "Medium", 79, "/injection/xss/comment"], ["xss-dom", "Medium", 79, "/injection/xss/dom"], ["xss-thymeleaf-utext", "Medium", 79, "/injection/xss/profile"]],
+      "access":  [["idor", "High", 639, "/access/note"], ["missing-func-authz", "High", 862, "/access/admin/users"], ["mass-assignment", "High", 915, "/access/profile"], ["client-controlled-role", "High", 602, "/access/dashboard"]],
+      "crypto":  [["weak-hash", "Medium", 916, "/crypto/hash"], ["hardcoded-secret", "High", 798, "/crypto/token"], ["weak-cipher", "Medium", 327, "/crypto/encrypt"], ["insecure-randomness", "High", 338, "/crypto/reset-token"]],
+      "deser":   [["native-deser", "Critical", 502, "/deserialization/native"], ["unsafe-yaml", "Critical", 502, "/deserialization/yaml"], ["xmldecoder-rce", "Critical", 502, "/deserialization/xml"]],
+      "ssrf":    [["ssrf-fetch", "High", 918, "/ssrf/fetch"], ["ssrf-webhook", "High", 918, "/ssrf/webhook"], ["ssrf-blocklist-bypass", "High", 918, "/ssrf/preview"]],
+      "path":    [["path-read", "High", 22, "/path/read"], ["path-download", "High", 22, "/path/download"], ["zip-slip", "High", 22, "/path/extract"]]
+    }
+  }
+}
