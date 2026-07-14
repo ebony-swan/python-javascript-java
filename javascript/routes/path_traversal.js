@@ -117,7 +117,7 @@ router.get('/download', (req, res) => {
 //   target (web root, cron.d, a startup/rc file, .ssh/authorized_keys), which is
 //   what makes it MEDIUM-HIGH rather than a guaranteed HIGH.
 // PREVALENCE TODAY: greenfield LOW (mainstream archive libraries added Zip-Slip
-//   guards after the 2018 Snyk disclosure — modern unzip/tar reject `..` by
+//   guards after the 2018 Zip-Slip disclosure — modern unzip/tar reject `..` by
 //   default — so new code that uses them is usually safe) | legacy/10yr
 //   tech-debt MEDIUM (hand-rolled "loop the entries and write each to
 //   destDir + entry.name" extractors, and pre-2018 library versions, still ship
