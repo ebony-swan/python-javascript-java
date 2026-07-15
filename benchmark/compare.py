@@ -82,6 +82,12 @@ def detect_lang(path):
         return "javascript"
     if p.endswith((".java", ".html")):
         return "java"
+    if p.endswith(".go"):
+        return "go"
+    if p.endswith((".cs", ".cshtml", ".razor")):
+        return "csharp"
+    if p.endswith((".php", ".phtml")):
+        return "php"
     return None
 
 
@@ -147,18 +153,24 @@ def scan_safe_ranges(source_root, baseline):
     source_root, so the engine has no hard-coded project paths and can be spun
     out on its own. `source_available` is False when none of the module dirs
     exist (engine copied out without the code) -> precision reported as n/a."""
+    # Per-language: what line starts a handler unit. SAFE-ness is judged from the
+    # route path and/or the function/method name — never from comments.
     anchor_rx = {
         "python": re.compile(r"^\s*@\w+\.(?:get|post|put|delete|route)\(", re.I),
         "javascript": re.compile(r"^\s*\w+\.(?:get|post|put|delete|use)\(", re.I),
         "java": re.compile(r"^\s*@(?:Get|Post|Put|Delete|Request)Mapping\b"),
+        "csharp": re.compile(r"^\s*\[Http(?:Get|Post|Put|Delete)\("),
+        "php": re.compile(r"^\s*route\s*\("),
+        "go": re.compile(r"^\s*func\s+[A-Za-z_]\w*\s*\("),
     }
     layout = baseline.get("source_layout", {})
     modules = layout.get("modules", {})
     marker = str(layout.get("safe_marker", "safe")).lower()
     lang_dirs = {lang: os.path.join(source_root, rel) for lang, rel in modules.items()}
-    quoted = re.compile(r"""["']([^"']*)["']""")
+    quoted_all = re.compile(r"""["']([^"']*)["']""")
     py_def = re.compile(r"^\s*def\s+(\w+)")
-    java_name = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
+    go_func = re.compile(r"^\s*func\s+([A-Za-z_]\w*)")
+    ident_before_paren = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
     ranges = defaultdict(list)
     source_available = False
     for lang, d in lang_dirs.items():
@@ -178,21 +190,30 @@ def scan_safe_ranges(source_root, baseline):
             starts.append(len(lines) + 1)  # sentinel
             for k in range(len(starts) - 1):
                 s, e = starts[k], starts[k + 1] - 1
-                m = quoted.search(lines[s - 1])
-                route = m.group(1) if m else ""
-                name = ""
+                anchor_line = lines[s - 1]
+                route, name = "", ""
+                if lang in ("python", "javascript", "java", "csharp"):
+                    m = quoted_all.search(anchor_line)
+                    route = m.group(1) if m else ""
                 if lang == "python":
                     dm = py_def.search("\n".join(lines[s - 1:min(s + 4, e + 1)]))
                     name = dm.group(1) if dm else ""
-                elif lang == "java":
+                elif lang in ("java", "csharp"):
                     for ln in lines[s:min(s + 6, e + 1)]:
                         st = ln.strip()
-                        if st.startswith(("//", "*", "/*", "@")):
-                            continue  # skip comments/annotations (a comment word
-                                      # like "unsafe (" must not be read as a method)
+                        if st.startswith(("//", "*", "/*", "@", "[")):
+                            continue  # skip comments/annotations ("unsafe (" is not a method)
                         if "(" in ln:
-                            jm = java_name.search(ln)
+                            jm = ident_before_paren.search(ln)
                             name = jm.group(1) if jm else ""
+                            break
+                elif lang == "go":
+                    gm = go_func.search(anchor_line)
+                    name = gm.group(1) if gm else ""
+                elif lang == "php":
+                    for q in quoted_all.findall(anchor_line):  # route('METHOD','/path',fn)
+                        if q.startswith("/"):
+                            route = q
                             break
                 if marker in route.lower() or marker in name.lower():
                     ranges[fn].append((s, e))
@@ -370,8 +391,9 @@ def classify(findings, baseline, safe_ranges):
 
 def score(findings, baseline):
     have_lines = any(f["line"] is not None for f in findings)
-    cats = ["sqli", "command", "xss", "access", "crypto", "deser", "path", "ssrf"]
-    langs = ["python", "javascript", "java"]
+    cats = ["sqli", "command", "xss", "access", "crypto", "deser", "ssrf", "path"]
+    # Languages are whatever the baseline defines (3, 6, ...), in declared order.
+    langs = list(baseline.get("expected", {}).keys())
 
     # coverage: crediting findings = disp match (right type, right module, not FP)
     credit = defaultdict(list)
@@ -451,12 +473,12 @@ def render(s, baseline, report_path):
     p(f"{'baseline':10}{brow}   {s['base_total']}")
     p("")
 
-    # coverage matrix
+    # coverage matrix (one column per language, whatever the baseline defines)
     p("## Coverage matrix (planted vuln class detected in its module, per language)")
-    p(f"{'category':22}{'python':>10}{'javascript':>12}{'java':>8}")
+    colw = 12
+    p(f"{'category':22}" + "".join(f"{lang[:colw - 1]:>{colw}}" for lang in s["langs"]))
     for cat in s["cats"]:
-        cells = "".join(f"{_cell(s['matrix'][(lang, cat)]):>{w}}"
-                        for lang, w in zip(s["langs"], [10, 12, 8]))
+        cells = "".join(f"{_cell(s['matrix'][(lang, cat)]):>{colw}}" for lang in s["langs"])
         p(f"{CAT_NAMES[cat]:22}{cells}")
     p("")
     recall = 100.0 * s["detected_cells"] / s["cells"]

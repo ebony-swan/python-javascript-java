@@ -11,7 +11,10 @@
     "modules": {
       "python": "python/app/vulns",
       "javascript": "javascript/routes",
-      "java": "java/src/main/java/com/example/vulnapp/vulns"
+      "java": "java/src/main/java/com/example/vulnapp/vulns",
+      "go": "go",
+      "csharp": "csharp/Controllers",
+      "php": "php/vulns"
     }
   },
 
@@ -36,7 +39,9 @@
     ["ssrf", "ssrf"],
     ["path_traversal", "path"], ["pathtraversal", "path"],
     ["db.", "__framework__"], ["__init__", "__framework__"],
-    ["server.", "__framework__"], ["run.py", "__framework__"], ["schema", "__framework__"]
+    ["server.", "__framework__"], ["run.py", "__framework__"], ["schema", "__framework__"],
+    ["main.go", "__framework__"], ["registry.go", "__framework__"], ["util.go", "__framework__"],
+    ["program.cs", "__framework__"], ["index.php", "__framework__"], ["lib.php", "__framework__"]
   ],
 
   "rule_keywords": [
@@ -83,6 +88,36 @@
       "access":  [["idor", "High", 639, "/access/note"], ["missing-func-authz", "High", 862, "/access/admin/users"], ["mass-assignment", "High", 915, "/access/profile"], ["client-controlled-role", "High", 602, "/access/dashboard"]],
       "crypto":  [["weak-hash", "Medium", 916, "/crypto/hash"], ["hardcoded-secret", "High", 798, "/crypto/token"], ["weak-cipher", "Medium", 327, "/crypto/encrypt"], ["insecure-randomness", "High", 338, "/crypto/reset-token"]],
       "deser":   [["native-deser", "Critical", 502, "/deserialization/native"], ["unsafe-yaml", "Critical", 502, "/deserialization/yaml"], ["xmldecoder-rce", "Critical", 502, "/deserialization/xml"]],
+      "ssrf":    [["ssrf-fetch", "High", 918, "/ssrf/fetch"], ["ssrf-webhook", "High", 918, "/ssrf/webhook"], ["ssrf-blocklist-bypass", "High", 918, "/ssrf/preview"]],
+      "path":    [["path-read", "High", 22, "/path/read"], ["path-download", "High", 22, "/path/download"], ["zip-slip", "High", 22, "/path/extract"]]
+    },
+    "go": {
+      "sqli":    [["sqli-login-bypass", "Critical", 89, "/injection/sql/login"], ["sqli-union-theft", "Critical", 89, "/injection/sql/search"], ["sqli-orderby-blind", "High", 89, "/injection/sql/notes"]],
+      "command": [["cmd-ping-shell", "Critical", 78, "/injection/command/ping"], ["cmd-dns-shell", "Critical", 78, "/injection/command/dns"], ["cmd-arg-injection", "High", 78, "/injection/command/backup"]],
+      "xss":     [["xss-reflected", "Medium", 79, "/injection/xss/hello"], ["xss-stored", "Medium", 79, "/injection/xss/comment"], ["xss-dom", "Medium", 79, "/injection/xss/dom"], ["xss-text-template", "Medium", 79, "/injection/xss/profile"]],
+      "access":  [["idor", "High", 639, "/access/note"], ["missing-func-authz", "High", 862, "/access/admin/users"], ["mass-assignment", "High", 915, "/access/profile"], ["client-controlled-role", "High", 602, "/access/dashboard"]],
+      "crypto":  [["weak-hash", "Medium", 916, "/crypto/hash"], ["hardcoded-secret", "High", 798, "/crypto/token"], ["weak-cipher", "Medium", 327, "/crypto/encrypt"], ["insecure-randomness", "High", 338, "/crypto/reset-token"]],
+      "deser":   [["native-decode", "Medium", 502, "/deserialization/native"], ["template-injection", "High", 94, "/deserialization/template"], ["type-confusion", "Medium", 502, "/deserialization/decode"]],
+      "ssrf":    [["ssrf-fetch", "High", 918, "/ssrf/fetch"], ["ssrf-webhook", "High", 918, "/ssrf/webhook"], ["ssrf-blocklist-bypass", "High", 918, "/ssrf/preview"]],
+      "path":    [["path-read", "High", 22, "/path/read"], ["path-download", "High", 22, "/path/download"], ["zip-slip", "High", 22, "/path/extract"]]
+    },
+    "csharp": {
+      "sqli":    [["sqli-login-bypass", "Critical", 89, "/injection/sql/login"], ["sqli-union-theft", "Critical", 89, "/injection/sql/search"], ["sqli-orderby-blind", "High", 89, "/injection/sql/notes"]],
+      "command": [["cmd-ping-shell", "Critical", 78, "/injection/command/ping"], ["cmd-dns-shell", "Critical", 78, "/injection/command/dns"], ["cmd-arg-injection", "High", 78, "/injection/command/backup"]],
+      "xss":     [["xss-reflected", "Medium", 79, "/injection/xss/hello"], ["xss-stored", "Medium", 79, "/injection/xss/comment"], ["xss-dom", "Medium", 79, "/injection/xss/dom"], ["xss-attribute-context", "Medium", 79, "/injection/xss/profile"]],
+      "access":  [["idor", "High", 639, "/access/note"], ["missing-func-authz", "High", 862, "/access/admin/users"], ["mass-assignment", "High", 915, "/access/profile"], ["client-controlled-role", "High", 602, "/access/dashboard"]],
+      "crypto":  [["weak-hash", "Medium", 916, "/crypto/hash"], ["hardcoded-secret", "High", 798, "/crypto/token"], ["weak-cipher", "Medium", 327, "/crypto/encrypt"], ["insecure-randomness", "High", 338, "/crypto/reset-token"]],
+      "deser":   [["native-typenamehandling", "Critical", 502, "/deserialization/native"], ["unsafe-yaml", "Critical", 502, "/deserialization/yaml"], ["xml-deserialization", "Critical", 502, "/deserialization/xml"]],
+      "ssrf":    [["ssrf-fetch", "High", 918, "/ssrf/fetch"], ["ssrf-webhook", "High", 918, "/ssrf/webhook"], ["ssrf-blocklist-bypass", "High", 918, "/ssrf/preview"]],
+      "path":    [["path-read", "High", 22, "/path/read"], ["path-download", "High", 22, "/path/download"], ["zip-slip", "High", 22, "/path/extract"]]
+    },
+    "php": {
+      "sqli":    [["sqli-login-bypass", "Critical", 89, "/injection/sql/login"], ["sqli-union-theft", "Critical", 89, "/injection/sql/search"], ["sqli-orderby-blind", "High", 89, "/injection/sql/notes"]],
+      "command": [["cmd-ping-shell", "Critical", 78, "/injection/command/ping"], ["cmd-dns-shell", "Critical", 78, "/injection/command/dns"], ["cmd-arg-injection", "High", 78, "/injection/command/backup"]],
+      "xss":     [["xss-reflected", "Medium", 79, "/injection/xss/hello"], ["xss-stored", "Medium", 79, "/injection/xss/comment"], ["xss-dom", "Medium", 79, "/injection/xss/dom"], ["xss-echo-context", "Medium", 79, "/injection/xss/profile"]],
+      "access":  [["idor", "High", 639, "/access/note"], ["missing-func-authz", "High", 862, "/access/admin/users"], ["mass-assignment", "High", 915, "/access/profile"], ["client-controlled-role", "High", 602, "/access/dashboard"]],
+      "crypto":  [["weak-hash", "Medium", 916, "/crypto/hash"], ["hardcoded-secret", "High", 798, "/crypto/token"], ["weak-cipher", "Medium", 327, "/crypto/encrypt"], ["insecure-randomness", "High", 338, "/crypto/reset-token"]],
+      "deser":   [["native-unserialize", "Critical", 502, "/deserialization/native"], ["xxe", "High", 611, "/deserialization/xml"], ["eval-injection", "Critical", 95, "/deserialization/eval"]],
       "ssrf":    [["ssrf-fetch", "High", 918, "/ssrf/fetch"], ["ssrf-webhook", "High", 918, "/ssrf/webhook"], ["ssrf-blocklist-bypass", "High", 918, "/ssrf/preview"]],
       "path":    [["path-read", "High", 22, "/path/read"], ["path-download", "High", 22, "/path/download"], ["zip-slip", "High", 22, "/path/extract"]]
     }

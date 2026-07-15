@@ -11,6 +11,16 @@ npm-debug.log*
 # Java / Maven
 java/target/
 
+# Go
+go/vulnapp
+
+# C# / .NET
+csharp/bin/
+csharp/obj/
+
+# PHP
+php/data/vulnapp.db
+
 # Editor / OS
 .DS_Store
 .idea/

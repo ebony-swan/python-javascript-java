@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>VulnApp</RootNamespace>
+    <AssemblyName>VulnApp</AssemblyName>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SQLite ADO.NET provider, used with raw SQL by the injection demos. -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
+    <!-- Used by the insecure-deserialization demo (YAML permutation). -->
+    <PackageReference Include="YamlDotNet" Version="16.2.0" />
+    <!-- Used by the insecure-deserialization demo (JSON TypeNameHandling gadget). -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+</Project>
