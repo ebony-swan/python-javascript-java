@@ -10,10 +10,12 @@ Inspired by [OWASP NodeGoat](https://github.com/OWASP/NodeGoat), this project
 takes the same idea — a deliberately vulnerable app you can exploit and then
 learn to fix — and does three things differently:
 
-1. **Six languages, one lab.** The *same* OWASP categories are implemented in
-   **Java** (Spring Boot), **JavaScript** (Express), **Python** (Flask),
-   **Go** (net/http), **C#** (ASP.NET Core), and **PHP** — so you can compare how
-   each flaw looks, and how each ecosystem's defaults help or hurt, side by side.
+1. **Five languages, one lab (a sixth in progress).** The *same* OWASP categories
+   are implemented in **Java** (Spring Boot), **JavaScript** (Express),
+   **Python** (Flask), **Go** (net/http), and **C#** (ASP.NET Core) — so you can
+   compare how each flaw looks, and how each ecosystem's defaults help or hurt,
+   side by side. A **PHP** app is a work in progress (SQL injection and command
+   injection implemented; the remaining categories are slated for a later build).
 2. **Multiple permutations per vulnerability.** Each category ships several
    *variations* of the same weakness (e.g. SQL injection via concatenation, via
    string-formatting, and via a dynamic `ORDER BY`), not just one canonical
@@ -41,7 +43,7 @@ of likelihood** (see [`docs/`](docs/README.md)):
 ├── python/        Flask app (Python 3.11, sqlite3)            -> http://127.0.0.1:5000/
 ├── go/            net/http app (Go 1.24, modernc sqlite)      -> http://127.0.0.1:8081/
 ├── csharp/        ASP.NET Core app (.NET 9, Microsoft.Data.Sqlite) -> http://127.0.0.1:5001/
-├── php/           PHP 8.4 app (built-in server, PDO SQLite)   -> http://127.0.0.1:8082/
+├── php/           PHP 8.4 app (built-in server, PDO SQLite)   -> http://127.0.0.1:8082/  [WIP: SQLi + command only]
 ├── benchmark/     Vendor-neutral engine to score any SAST report against ground truth
 └── docs/          Vulnerability catalog + likelihood analysis + OWASP 2021↔2025 mapping
 ```
@@ -52,10 +54,11 @@ a glance.
 
 ## Vulnerability coverage (the "core code-level" set)
 
-All six categories are implemented in **all six languages** (Java, JavaScript,
-Python, Go, C#, PHP) with multiple permutations each. Language-idiomatic sinks
-differ — e.g. deserialization is `pickle`/`node-serialize`/`ObjectInputStream`/
-`unserialize()` (Python/JS/Java/PHP), Json.NET `TypeNameHandling` (C#), and a
+All six categories are implemented in **five complete languages** (Java,
+JavaScript, Python, Go, C#) with multiple permutations each; the **PHP** app is a
+work in progress (SQL injection + command injection so far). Language-idiomatic
+sinks differ — e.g. deserialization is `pickle`/`node-serialize`/
+`ObjectInputStream` (Python/JS/Java), Json.NET `TypeNameHandling` (C#), and a
 genuinely lower-severity decode/`text/template` issue in Go (memory-safe, rarely
 RCE) — and the docs rate each honestly.
 
@@ -124,11 +127,13 @@ cd csharp
 dotnet run
 ```
 
-**PHP** — http://127.0.0.1:8082/  (requires PHP 8 with pdo_sqlite)
+**PHP** — http://127.0.0.1:8082/  (requires PHP 8 with pdo_sqlite) — **work in progress**
 ```bash
 cd php
 php -S 127.0.0.1:8082 index.php
 ```
+> Only SQL injection and command injection are implemented so far; the other
+> categories are slated for a later build.
 
 ## A note on the intentionally vulnerable dependencies
 

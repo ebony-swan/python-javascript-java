@@ -1,6 +1,12 @@
 # PHP VulnApp
 
-Deliberately vulnerable PHP app — one of six parallel implementations in this lab
+> **🚧 Work in progress.** This app is intentionally incomplete: **SQL injection**
+> and **command injection** are implemented; the remaining categories (XSS, broken
+> access control, cryptographic failures, insecure deserialization, SSRF, path
+> traversal) are **slated for a later build**. Until then, PHP is excluded from
+> the benchmark engine's scoring (see `benchmark/baseline.json → deferred_languages`).
+
+Deliberately vulnerable PHP app — companion to the five complete apps in this lab
 (see the [repo README](../README.md)). For security education only; never expose
 to an untrusted network.
 
@@ -24,9 +30,10 @@ are private. Delete `data/vulnapp.db` to reset.
 - `index.php` — front controller; **auto-loads** every file in `vulns/` and
   dispatches by method + path.
 - `lib.php` — `route()` registry, `get_db()`, `json_response()`, seed data.
-- `vulns/` — one file per OWASP category: `injection_sql.php`,
-  `injection_command.php`, `injection_xss.php`, `access_control.php`,
-  `crypto.php`, `deserialization.php`, `ssrf.php`, `path_traversal.php`.
+- `vulns/` — one file per OWASP category. Implemented so far:
+  `injection_sql.php` ✅ and `injection_command.php` ✅. Planned for the later
+  build: `injection_xss.php`, `access_control.php`, `crypto.php`,
+  `deserialization.php`, `ssrf.php`, `path_traversal.php`.
 
 ## Try it
 ```bash
