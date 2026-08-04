@@ -78,8 +78,8 @@ category shift.
 
 **Benchmarking a scanner against this lab?** See
 [`docs/expected-scan-results.md`](docs/expected-scan-results.md) — the
-ground-truth answer key: **86 intentional findings (23 Critical / 45 High /
-18 Medium / 0 Low)** scored with CVSS v3.1 (81 SAST + 5 SCA), plus the 24 safe
+ground-truth answer key: **140 intentional findings (34 Critical / 74 High /
+32 Medium / 0 Low)** scored with CVSS v3.1 (135 SAST + 5 SCA), plus the 41 safe
 reference handlers a good tool must *not* flag. Then drop any vendor's report
 into the **benchmark engine** to score it automatically:
 

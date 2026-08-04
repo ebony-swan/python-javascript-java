@@ -10,12 +10,16 @@ safe code?).
 
 | | Findings | Critical | High | Medium | Low |
 |---|---:|---:|---:|---:|---:|
-| **Code-level (SAST)** | **81** | 21 | 43 | 17 | 0 |
+| **Code-level (SAST)** | **135** | 32 | 72 | 31 | 0 |
 | **Dependencies (SCA)** | **5** | 2 | 2 | 1 | 0 |
-| **TOTAL** | **86** | **23** | **45** | **18** | **0** |
+| **TOTAL** | **140** | **34** | **74** | **32** | **0** |
+
+Covers the **five complete languages** (Python, JavaScript, Java, Go, C#) at 27
+planted vulnerabilities each. The **PHP** app is a work in progress and is
+intentionally excluded from scoring until it is complete.
 
 Plus a small, tool-dependent tail of **app-level / hardening findings** (~5,
-mostly Low–Medium) described at the end. The **86** above is the crisp,
+mostly Low–Medium) described at the end. The **140** above is the crisp,
 intentional true-positive set.
 
 > **Why zero Low?** Every planted flaw is a genuine, exploitable weakness
@@ -73,9 +77,9 @@ changes the impact.
 | 16 | Crypto — hard-coded secret / token key | CWE-798 | 7.5 | High |
 | 17 | Crypto — weak cipher / ECB / static key | CWE-327 | 5.9 | Medium |
 | 18 | Crypto — insecure randomness for tokens | CWE-338 | 7.5 | High |
-| 19 | Deser — native (pickle / node-serialize / ObjectInputStream) | CWE-502 | 9.8 | Critical |
-| 20 | Deser — unsafe config format (YAML / `eval`) | CWE-502 / 95 | 9.8 | Critical |
-| 21 | Deser — integrity-specific ⚠️ | CWE-502 / 1321 | 9.8 / **8.1** | Critical / **High (JS proto-pollution)** |
+| 19 | Deser — native (pickle / node-serialize / ObjectInputStream / `TypeNameHandling`) ⚠️ | CWE-502 | 9.8 | Critical / **Medium (Go)** |
+| 20 | Deser — unsafe config format (YAML / `eval`) ⚠️ | CWE-502 / 95 / 94 | 9.8 | Critical / **High (Go template injection)** |
+| 21 | Deser — integrity-specific ⚠️ | CWE-502 / 1321 | 9.8 / **8.1** | Critical / **High (JS proto-pollution)** / **Medium (Go type confusion)** |
 | 22 | SSRF — fetch user URL | CWE-918 | 8.6 | High |
 | 23 | SSRF — internal / metadata webhook | CWE-918 | 7.5 | High |
 | 24 | SSRF — blocklist bypass | CWE-918 | 8.6 | High |
@@ -85,11 +89,24 @@ changes the impact.
 
 ⚠️ **Row 10 (XSS unescaped template):** Python renders user input as a Jinja
 template → **Server-Side Template Injection → RCE (CVSS 9.8 Critical)**. Java
-(`th:utext`) and JavaScript (HTML-attribute context) are plain XSS (6.1 Medium).
+(`th:utext`), JavaScript and C# (HTML-attribute context), and Go
+(`text/template`) are plain XSS (6.1 Medium).
 
-⚠️ **Row 21 (integrity-specific deserialization):** Python `eval()` and Java
-`XMLDecoder` are RCE (9.8 Critical); JavaScript is prototype pollution
-(CWE-1321, 8.1 High).
+⚠️ **Rows 19–21 (deserialization) — Go is the outlier.** Python, JavaScript,
+Java and C# each carry three RCE-class deserialization sinks (9.8 Critical):
+native (`pickle` / `node-serialize` / `ObjectInputStream` / Json.NET
+`TypeNameHandling`), an unsafe config format (`yaml.unsafe_load` / SnakeYAML /
+YamlDotNet / `eval`), and an integrity-specific sink (Python `eval()`, Java
+`XMLDecoder`, C# type-controlled `XmlSerializer`). The two exceptions:
+
+- **JavaScript row 21** is prototype pollution (CWE-1321, 8.1 High), not direct RCE.
+- **Go rows 19–21** have no equivalent gadget chain at all — Go is memory-safe
+  and its `encoding/*` decoders do not instantiate attacker-named types — so
+  they are a decode issue (Medium), `text/template` injection (CWE-94, High),
+  and type confusion (Medium).
+
+Go's lower ratings are deliberate and rated honestly rather than inflated for
+symmetry; they are why Go totals 4 Critical where the others total 6–8.
 
 ### Per-language tally
 
@@ -97,23 +114,34 @@ template → **Server-Side Template Injection → RCE (CVSS 9.8 Critical)**. Jav
 |----------|------:|---------:|-----:|-------:|----:|
 | **Python** | 27 | 8 | 14 | 5 | 0 |
 | **Java** | 27 | 7 | 14 | 6 | 0 |
+| **C#** | 27 | 7 | 14 | 6 | 0 |
 | **JavaScript** | 27 | 6 | 15 | 6 | 0 |
-| **SAST total** | **81** | **21** | **43** | **17** | **0** |
+| **Go** | 27 | 4 | 15 | 8 | 0 |
+| **SAST total** | **135** | **32** | **72** | **31** | **0** |
 
-*Python leads on Criticals because its template-injection (SSTI) and three
-RCE-class deserialization sinks all reach code execution. JavaScript has one
-fewer Critical because its integrity-specific deserialization is prototype
-pollution (High) rather than direct RCE.*
+*Every language plants the same 27 vulnerabilities; only the severity mix
+differs, because the idiomatic sink differs.* Python leads on Criticals because
+its template-injection (SSTI) and three RCE-class deserialization sinks all
+reach code execution. C# matches Java exactly — Json.NET `TypeNameHandling`,
+YamlDotNet, and a type-controlled `XmlSerializer` give it the same three
+deserialization RCEs. JavaScript has one fewer Critical because its
+integrity-specific deserialization is prototype pollution (High) rather than
+direct RCE. **Go is the deliberate low end at 4 Critical**: it is memory-safe
+and has no equivalent deserialization gadget chain, so all three of its deser
+rows land Medium/High (see rows 19–21). A scanner that reports Go as
+*less* vulnerable here is correct, not broken.
 
 ---
 
 ## Dependency findings (SCA) — 5
 
 All in the JavaScript app, which pins two deliberately-outdated libraries. (The
-Python and Java deserialization flaws are **code-level, not vulnerable
-dependencies** — `PyYAML 6.0.2`, `requests`, `SnakeYAML 2.x` are patched
-versions used unsafely. That contrast is itself a teaching point: SCA would find
-**nothing** in Python/Java here; the risk is all in how the code calls them.)
+deserialization flaws in the other four languages are **code-level, not
+vulnerable dependencies** — `PyYAML 6.0.2`, `requests`, `SnakeYAML 2.x`,
+`Newtonsoft.Json 13.0.3`, `YamlDotNet 16.2.0` and Go's stdlib decoders are all
+current, patched versions used unsafely. That contrast is itself a teaching
+point: SCA would find **nothing** in Python/Java/C#/Go here; the risk is
+entirely in how the code calls them.)
 
 | Package | Version | CVE | Type | CVSS | Severity |
 |---------|---------|-----|------|-----:|----------|
@@ -129,25 +157,26 @@ versions used unsafely. That contrast is itself a teaching point: SCA would find
 
 ## The benchmark: precision & recall
 
-An **ideal** scan is not just "find 86." It must also **not** raise false alarms:
+An **ideal** scan is not just "find 140." It must also **not** raise false alarms:
 
-- **Recall target — 86 / 86.** Missing any planted flaw is a false negative.
+- **Recall target — 140 / 140.** Missing any planted flaw is a false negative.
 - **Precision target — 0 false positives**, specifically on the **control group**:
   every module ends with a clearly-labelled **SAFE reference handler**
   (parameterized query, escaped output, allow-listed path, `yaml.safe_load`,
-  CSPRNG, etc.). There are **8 safe handlers per app = 24 total** (the
-  `*-safe` / `/safe` / `read-safe` endpoints). A tool that flags these is
+  CSPRNG, etc.). There are **8 safe handlers per app across the five complete
+  languages = 41 total** (the JavaScript crypto module contributes two) — the
+  `*-safe` / `/safe` / `read-safe` endpoints. A tool that flags these is
   over-reporting.
 
 | Metric | Ideal result |
 |--------|--------------|
-| True positives detected | 86 / 86 |
+| True positives detected | 140 / 140 |
 | False negatives | 0 |
-| False positives (on the 24 safe handlers) | 0 |
+| False positives (on the 41 safe handlers) | 0 |
 
 ---
 
-## Beyond the 86: app-level / hardening findings (tool-dependent)
+## Beyond the 140: app-level / hardening findings (tool-dependent)
 
 A thorough scanner will legitimately add a handful more, mostly **Low–Medium**.
 These are excluded from the headline because their count varies a lot by tool and
@@ -167,6 +196,7 @@ Expect roughly **+3 to +6** findings from this category depending on the scanner
 
 ## One-line answer
 
-> **~86 intentional findings: 23 Critical, 45 High, 18 Medium, 0 Low** (81 SAST +
-> 5 SCA), with a further ~3–6 Low/Medium hardening findings depending on the
-> tool — and **zero** findings expected on the 24 safe reference handlers.
+> **~140 intentional findings: 34 Critical, 74 High, 32 Medium, 0 Low** (135 SAST
+> + 5 SCA across five languages), with a further ~3–6 Low/Medium hardening
+> findings depending on the tool — and **zero** findings expected on the 41 safe
+> reference handlers.

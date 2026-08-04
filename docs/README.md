@@ -1,7 +1,7 @@
 # Vulnerability Catalog & Likelihood Analysis
 
-This directory documents every vulnerability in the lab, in all three languages,
-and rates each one along **two independent axes**:
+This directory documents every vulnerability in the lab and rates each one along
+**two independent axes**:
 
 1. **Exploitation likelihood** — *if the code is reachable, how likely is an
    attacker to succeed?*
@@ -29,8 +29,8 @@ meet.
 | **Expected scan results (ground-truth baseline)** | [`expected-scan-results.md`](expected-scan-results.md) | — |
 
 > **Benchmarking a scanner?** [`expected-scan-results.md`](expected-scan-results.md)
-> is the answer key: **86 intentional findings (23 Critical / 45 High / 18 Medium
-> / 0 Low)** scored with CVSS v3.1, plus the 24 safe handlers a good tool must
+> is the answer key: **140 intentional findings (34 Critical / 74 High / 32 Medium
+> / 0 Low)** scored with CVSS v3.1, plus the 41 safe handlers a good tool must
 > *not* flag.
 
 ---
