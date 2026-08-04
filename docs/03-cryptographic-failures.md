@@ -26,18 +26,27 @@ Endpoints: `/crypto`.
   env-vars are standard, yet secrets still slip into source — see any secret-
   scanning report), **HIGH** legacy.
 - **P3 — weak cipher/mode.** A static key with no per-message IV in a
-  structure-leaking mode (AES-**ECB** in JS/Java; a static repeating-key XOR in
+  structure-leaking mode (AES-**ECB** in JS, Java, **Go** (`crypto/aes` used
+  block-by-block) and **C#** (`CipherMode.ECB`); a static repeating-key XOR in
   Python, since no AES lib is bundled) means identical plaintext blocks produce
   identical ciphertext, and everything is reversible by anyone with the (shared,
   static) key. **MEDIUM** exploitation; **HIGH** legacy prevalence (ECB is the
-  classic "it encrypts, ship it" mistake).
+  classic "it encrypts, ship it" mistake). Note that Go and C# both make ECB the
+  path of least resistance: Go's `crypto/cipher` offers no ECB mode helper, so
+  the code loops over blocks manually, and .NET's `CipherMode` enum lists `ECB`
+  right beside `CBC` with no warning.
 - **P4 — insecure randomness.** Reset/session tokens from `random.Random`
-  (Mersenne Twister) / `Math.random` / `java.util.Random` are predictable — an
-  attacker who observes a few outputs can reconstruct the state and forge future
-  tokens → account takeover. **HIGH** exploitation; **MEDIUM** greenfield / **HIGH**
-  legacy.
+  (Mersenne Twister) / `Math.random` / `java.util.Random` / Go `math/rand` /
+  .NET `System.Random` are predictable — an attacker who observes a few outputs
+  can reconstruct the state and forge future tokens → account takeover. The Go
+  and C# variants seed from the **current time**, which narrows a brute-force to
+  a small window of candidate seeds. **HIGH** exploitation; **MEDIUM** greenfield
+  / **HIGH** legacy. The naming is the trap in both: `math/rand` and
+  `System.Random` read as "the random one" unless you already know to reach for
+  `crypto/rand` or `RandomNumberGenerator`.
 
 **Fix:** argon2/bcrypt/scrypt for passwords; secrets from a vault/KMS/env, never
 source; authenticated encryption (AES-GCM) with a random per-message nonce; a
-CSPRNG (`secrets`, `crypto.randomBytes`, `java.security.SecureRandom`) for all
+CSPRNG (`secrets`, `crypto.randomBytes`, `java.security.SecureRandom`,
+`crypto/rand`, `System.Security.Cryptography.RandomNumberGenerator`) for all
 security tokens. See `…reset-token-safe`.

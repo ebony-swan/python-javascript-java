@@ -85,17 +85,28 @@ validate/allow-list arguments; use `--` to end option parsing. See `…backup-sa
 - **P3 DOM-based.** The payload never reaches the server — client JS reads
   `location.hash` and assigns it to `innerHTML`: `/injection/xss/dom#<img src=x
   onerror=alert(1)>`. Server-side defenses can't see it → **MEDIUM**.
-- **P4 Disabled escaping — the language-idiomatic footgun:**
+- **P4 Disabled escaping — the language-idiomatic footgun.** All five apps expose
+  this at `GET /profile?name=`, but each reaches it a different way:
   - **Python:** `render_template_string` renders input *as a Jinja template* —
     not just XSS but **Server-Side Template Injection** (`name={{7*7}}`→`49`,
-    escalating to RCE; CWE-1336). Exploitation **HIGH/CRITICAL**.
+    escalating to RCE; CWE-1336). Exploitation **HIGH/CRITICAL**, and the only
+    permutation in this row rated Critical.
   - **JavaScript:** input reflected into an **attribute** context
     (`<input value="…">`); `name=" onmouseover=alert(1) x="` breaks out —
     showing that naive `<`/`>` escaping is insufficient per context.
   - **Java:** Thymeleaf `th:utext` **disables** the default escaping and emits
     raw HTML.
-  *Prevalence:* **LOW** in greenfield (SAST flags `render_template_string`/`utext`
-  on sight), **MEDIUM** in legacy.
+  - **C#:** the same attribute-context break-out as JavaScript — the value is
+    interpolated straight into `value="…"` with no encoding, so a literal quote
+    closes the attribute early. Razor would have encoded it; hand-built HTML
+    strings bypass that safety net entirely.
+  - **Go:** the handler renders with **`text/template` instead of
+    `html/template`**. The two packages have near-identical APIs, but only
+    `html/template` does contextual auto-escaping — so a one-word import change
+    silently removes all XSS protection. A pure escaping failure (6.1 Medium),
+    *not* SSTI: the template itself is fixed, only the data is attacker-supplied.
+  *Prevalence:* **LOW** in greenfield (SAST flags `render_template_string`/
+  `utext`/`text/template`-to-HTTP on sight), **MEDIUM** in legacy.
 
 **Fix:** contextual output encoding by default; never disable auto-escaping;
 render user data as *data*, not templates; set a Content-Security-Policy. See
