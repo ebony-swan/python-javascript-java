@@ -75,13 +75,11 @@ public class SqlInjectionController {
     // ========================================================================
     @GetMapping("/search")
     public Map<String, Object> search(@RequestParam(defaultValue = "") String q) {
-        // VULNERABLE: String.format interpolation of untrusted input into SQL.
-        String sql = String.format(
-                "SELECT title, body, owner FROM notes WHERE body LIKE '%%%s%%'", q);
+        String sql = "SELECT title, body, owner FROM notes WHERE body LIKE ?";
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("query", sql);
         try {
-            out.put("results", jdbc.queryForList(sql));
+            out.put("results", jdbc.queryForList(sql, "%" + q + "%"));
         } catch (Exception e) {
             out.put("error", e.getMessage());
         }
