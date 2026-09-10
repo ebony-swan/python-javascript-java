@@ -25,11 +25,10 @@ public class SqlInjectionController : ControllerBase
     [HttpGet("/injection/sql/login")]
     public IActionResult Login(string username = "", string password = "")
     {
-        // VULNERABLE: user input interpolated straight into the SQL string.
-        var sql = $"SELECT id, username, role FROM users WHERE username='{username}' AND password='{password}'";
+        var sql = "SELECT id, username, role FROM users WHERE username=@u AND password=@p";
         try
         {
-            var rows = Db.Query(sql);
+            var rows = Db.Query(sql, ("@u", username), ("@p", password));
             return new JsonResult(new { query = sql, authenticated = rows.Count > 0, @as = rows.Count > 0 ? rows[0] : null });
         }
         catch (Exception e)
