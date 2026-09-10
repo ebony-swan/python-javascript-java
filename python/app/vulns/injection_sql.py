@@ -32,12 +32,9 @@ def login():
     password = request.args.get("password", "")
     db = get_db()
     # VULNERABLE: user input concatenated straight into the SQL string.
-    sql = (
-        "SELECT id, username, role FROM users "
-        f"WHERE username = '{username}' AND password = '{password}'"
-    )
+    sql = "SELECT id, username, role FROM users WHERE username = ? AND password = ?"
     try:
-        row = db.execute(sql).fetchone()
+        row = db.execute(sql, (username, password)).fetchone()
     except Exception as exc:  # verbose errors also aid the attacker
         return jsonify({"query": sql, "error": str(exc)}), 500
     if row:
