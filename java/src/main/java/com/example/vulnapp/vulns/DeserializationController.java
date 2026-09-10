@@ -79,15 +79,7 @@ public class DeserializationController {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("input_b64", data);
         try {
-            byte[] bytes = Base64.getDecoder().decode(data);
-            Object obj;
-            // VULNERABLE: attacker-controlled bytes fed straight into ObjectInputStream;
-            // readObject() materializes an arbitrary type and triggers its magic methods.
-            try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
-                obj = ois.readObject();
-            }
-            out.put("deserialized_class", obj == null ? null : obj.getClass().getName());
-            out.put("value", String.valueOf(obj)); // for RceGadget this includes the command output
+            out.put("error", "Native Java deserialization of untrusted input is not allowed. Use /deserialization/safe with JSON bound to a fixed DTO.");
         } catch (Exception e) {
             out.put("error", e.getClass().getSimpleName() + ": " + e.getMessage());
         }
