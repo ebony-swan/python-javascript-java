@@ -53,10 +53,10 @@ public class SqlInjectionController : ControllerBase
     public IActionResult Search(string q = "")
     {
         // VULNERABLE: interpolated LIKE clause.
-        var sql = $"SELECT title, body, owner FROM notes WHERE body LIKE '%{q}%'";
+        var sql = "SELECT title, body, owner FROM notes WHERE body LIKE @q";
         try
         {
-            return new JsonResult(new { query = sql, results = Db.Query(sql) });
+            return new JsonResult(new { query = sql, results = Db.Query(sql, ("@q", $"%{q}%")) });
         }
         catch (Exception e)
         {
