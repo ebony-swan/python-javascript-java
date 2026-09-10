@@ -214,7 +214,7 @@ def fetch_safe():
         ip_str = info[4][0]
         if _ip_is_blocked(ip_str):
             return jsonify(
-                {"url": url, "allowed": False, "reason": f"host resolves to blocked ip {ip_str}"}
+                {"url": url, "allowed": False, "reason": "host resolves to a blocked address"}
             ), 400
     # SAFE: allow-listed + validated; disable redirects so a 302 cannot re-target.
     try:
