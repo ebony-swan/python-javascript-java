@@ -95,14 +95,25 @@ router.get('/read', (req, res) => {
 // ===========================================================================
 router.get('/download', (req, res) => {
   const name = req.query.name || '';
-  // VULNERABLE: download target resolved from user input with no containment —
-  // traversal and absolute paths stream any file the process can read.
-  const resolved = path.resolve(BASE_PUBLIC, name);
-  res.setHeader('Content-Disposition', `attachment; filename="${path.basename(resolved)}"`);
-  res.setHeader('X-Resolved-Path', resolved); // echo the effective path (like the SQL demo echoes the query)
-  const stream = fs.createReadStream(resolved);
+  const baseReal = fs.realpathSync(BASE_PUBLIC);
+  const resolved = path.resolve(baseReal, name);
+  if (resolved !== baseReal && !resolved.startsWith(baseReal + path.sep)) {
+    return res.status(403).json({ base: BASE_PUBLIC, name, resolved, error: 'path escapes base directory' });
+  }
+  let real;
+  try {
+    real = fs.realpathSync(resolved);
+  } catch (err) {
+    return res.status(404).json({ base: BASE_PUBLIC, name, resolved, error: err.message });
+  }
+  if (real !== baseReal && !real.startsWith(baseReal + path.sep)) {
+    return res.status(403).json({ base: BASE_PUBLIC, name, resolved: real, error: 'symlink escapes base directory' });
+  }
+  res.setHeader('Content-Disposition', `attachment; filename="${path.basename(real)}"`);
+  res.setHeader('X-Resolved-Path', real); // echo the effective path (like the SQL demo echoes the query)
+  const stream = fs.createReadStream(real);
   stream.on('error', (err) => {
-    if (!res.headersSent) res.status(404).json({ base: BASE_PUBLIC, name, resolved, error: err.message });
+    if (!res.headersSent) res.status(404).json({ base: BASE_PUBLIC, name, resolved: real, error: err.message });
   });
   stream.pipe(res);
 });
