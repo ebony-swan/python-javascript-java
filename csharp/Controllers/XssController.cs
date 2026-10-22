@@ -39,8 +39,9 @@ public class XssController : ControllerBase
     public IActionResult Hello(string name = "world")
     {
         // VULNERABLE: user input concatenated straight into the HTML body, unescaped.
-        var html = $"<!doctype html><html><body><h1>Hello, {name}!</h1>"
-                 + $"<p>Reflected without encoding. Echoed value: {name}</p></body></html>";
+        var encodedName = System.Net.WebUtility.HtmlEncode(name);
+        var html = $"<!doctype html><html><body><h1>Hello, {encodedName}!</h1>"
+                 + $"<p>Reflected without encoding. Echoed value: {encodedName}</p></body></html>";
         return Content(html, "text/html");
     }
 
